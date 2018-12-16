@@ -7,3 +7,4 @@ anomaly-detection.R
 anomaly-detection.Rproj
 clean-ewma.png
 original-ewma.png
+*.html
