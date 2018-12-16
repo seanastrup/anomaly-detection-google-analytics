@@ -1,0 +1,70 @@
+---
+title: "Anomaly Detection In Google Analytics"
+author: "Sean Astrup"
+output:
+  prettydoc::html_pretty:
+    theme: architect
+    highlight: github
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r echo=TRUE, warning=FALSE, results='hide', message=FALSE}
+library(tidyverse)
+library(stats)
+library(AnomalyDetection)
+library(ggplot2)
+library(ggthemes)
+library(qcc)
+library(animation)
+
+data <- readr::read_csv("data/raw.csv",
+                        col_types = cols(Date = col_date(format = "%m/%d/%Y"), 
+                                         Revenue = col_number()))
+
+data$AvgTransactionValue <- ifelse(data$Transactions == 0, 0, 
+                                   data$Revenue / data$Transactions)
+
+data$Date <- as.POSIXct(data$Date)
+
+d <- data %>% select(Date, AvgTransactionValue) %>% filter(!is.na(Date))
+```
+
+
+
+
+```{r}
+anomaly <- AnomalyDetection::AnomalyDetectionTs(d, max_anoms = 0.02, 
+                                                direction = 'both', 
+                                                plot = TRUE)
+
+
+anomaly$anoms$timestamp <- as.POSIXct(anomaly$anoms$timestamp)
+```
+
+
+```{r}
+ggplot(data, aes(Date, AvgTransactionValue)) +
+  geom_line(data = data, aes(Date, AvgTransactionValue), color = '#2f7ed8') + 
+  geom_point(data = anomaly$anoms, aes(timestamp, anoms), color = '#910000', 
+             shape = 4, size = 3) +
+  ggthemes::theme_hc()
+```
+
+
+
+```{r}
+dataCleaned <- 
+  data %>% 
+  filter(!as.Date(Date) %in% as.Date(anomaly$anoms$timestamp))
+```
+
+```{r}
+qcc::ewma(data$AvgTransactionValue, nsigmas = 4, lambda = 0.5)
+qcc::ewma(dataCleaned$AvgTransactionValue, nsigmas = 4, lambda = 0.5)
+```
+
