@@ -11,6 +11,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+#### The full code for this example is hosted [on GitHub here](https://github.com/seanastrup/anomaly-detection-google-analytics "GitHub Link")
 
 
 ```{r echo=TRUE, warning=FALSE, results='hide', message=FALSE}
